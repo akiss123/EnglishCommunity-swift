@@ -18,18 +18,25 @@ class JFLoginViewController: UIViewController {
     @IBOutlet weak var passwordField: UITextField!
     @IBOutlet weak var loginButton: UIButton!
     
+    let buttonColorNormal = UIColor.colorWithHexString("00ac59")
+    let buttonColorDisabled = UIColor.colorWithHexString("6d8579")
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let effectView = UIVisualEffectView(effect: UIBlurEffect(style: UIBlurEffectStyle.Dark))
-        effectView.frame = SCREEN_BOUNDS
-        bgImageView.addSubview(effectView)
+        usernameView.layer.borderColor = UIColor.whiteColor().CGColor
+        usernameView.layer.borderWidth = 0.5
+        passwordView.layer.borderColor = UIColor.whiteColor().CGColor
+        passwordView.layer.borderWidth = 0.5
         
         // 设置保存的账号
         usernameField.text = NSUserDefaults.standardUserDefaults().objectForKey("username") as? String
         passwordField.text = NSUserDefaults.standardUserDefaults().objectForKey("password") as? String
         
         didChangeTextField(usernameField)
+        
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(keyboardWillShow(_:)), name: UIKeyboardWillShowNotification, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(keyboardWillHide(_:)), name: UIKeyboardWillHideNotification, object: nil)
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -38,8 +45,40 @@ class JFLoginViewController: UIViewController {
         navigationController?.setNavigationBarHidden(true, animated: true)
     }
     
+    deinit {
+        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillShowNotification, object: nil)
+        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillHideNotification, object: nil)
+    }
+    
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         view.endEditing(true)
+    }
+    
+    /**
+     键盘即将显示
+     */
+    @objc private func keyboardWillShow(notification: NSNotification) {
+        
+        let userInfo = notification.userInfo!
+        
+        let beginHeight = (userInfo[UIKeyboardFrameBeginUserInfoKey] as! NSValue).CGRectValue().size.height
+        let endHeight = (userInfo[UIKeyboardFrameEndUserInfoKey] as! NSValue).CGRectValue().size.height
+        
+        if beginHeight > 0 && endHeight > 0 {
+            UIView.animateWithDuration(0.25) {
+                self.view.transform = CGAffineTransformMakeTranslation(0, -endHeight + (SCREEN_HEIGHT - CGRectGetMaxY(self.loginButton.frame)) - 10)
+            }
+        }
+        
+    }
+    
+    /**
+     键盘即将隐藏
+     */
+    @objc private func keyboardWillHide(notification: NSNotification) {
+        UIView.animateWithDuration(0.25) {
+            self.view.transform = CGAffineTransformIdentity
+        }
     }
     
     /**
@@ -66,10 +105,10 @@ class JFLoginViewController: UIViewController {
         
         if usernameField.text?.characters.count >= 5 && passwordField.text?.characters.count > 5 {
             loginButton.enabled = true
-            loginButton.backgroundColor = UIColor(red: 32/255.0, green: 170/255.0, blue: 238/255.0, alpha: 1)
+            loginButton.backgroundColor = buttonColorNormal
         } else {
             loginButton.enabled = false
-            loginButton.backgroundColor = UIColor.grayColor()
+            loginButton.backgroundColor = buttonColorDisabled
         }
     }
     

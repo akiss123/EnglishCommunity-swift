@@ -11,7 +11,6 @@ import UIKit
 protocol JFProfileHeaderViewDelegate: NSObjectProtocol {
     
     func didTappedAvatarButton(button: UIButton)
-    func didTappedDownloadButton()
     func didTappedFriendButton()
     func didTappedMessageButton()
     func didTappedInfoButton()
@@ -22,13 +21,11 @@ class JFProfileHeaderView: UIView {
     @IBOutlet weak var avatarButton: UIButton!
     @IBOutlet weak var nameLabel: UILabel!
     weak var delegate: JFProfileHeaderViewDelegate?
+    @IBOutlet weak var redPointLabel: UILabel!
+    
     
     @IBAction func didTappedAvatarButton() {
         delegate?.didTappedAvatarButton(avatarButton)
-    }
-    
-    @IBAction func didTappedDownloadButton() {
-        delegate?.didTappedDownloadButton()
     }
     
     @IBAction func didTappedFriendButton() {
@@ -47,6 +44,9 @@ class JFProfileHeaderView: UIView {
         super.awakeFromNib()
         avatarButton.layer.borderColor = UIColor.colorWithHexString("58D475").CGColor
         avatarButton.layer.borderWidth = 4
+        
+        redPointLabel.layer.cornerRadius = 7.5
+        redPointLabel.layer.masksToBounds = true
     }
     
 }

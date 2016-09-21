@@ -15,32 +15,36 @@ protocol JFRegisterViewControllerDelegate: NSObjectProtocol {
 class JFRegisterViewController: UIViewController {
     
     @IBOutlet weak var bgImageView: UIImageView!
-    
     @IBOutlet weak var usernameView: UIView!
     @IBOutlet weak var usernameField: UITextField!
-    
     @IBOutlet weak var passwordView1: UIView!
     @IBOutlet weak var passwordField1: UITextField!
-    
     @IBOutlet weak var passwordView2: UIView!
     @IBOutlet weak var passwordField2: UITextField!
-    
     @IBOutlet weak var registerButton: UIButton!
+    let buttonColorNormal = UIColor.colorWithHexString("00ac59")
+    let buttonColorDisabled = UIColor.colorWithHexString("6d8579")
     
     weak var delegate: JFRegisterViewControllerDelegate?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let effectView = UIVisualEffectView(effect: UIBlurEffect(style: UIBlurEffectStyle.Dark))
-        effectView.frame = SCREEN_BOUNDS
-        bgImageView.addSubview(effectView)
-        
+        usernameView.layer.borderColor = UIColor.whiteColor().CGColor
+        usernameView.layer.borderWidth = 0.5
+        passwordView1.layer.borderColor = UIColor.whiteColor().CGColor
+        passwordView1.layer.borderWidth = 0.5
+        passwordView2.layer.borderColor = UIColor.whiteColor().CGColor
+        passwordView2.layer.borderWidth = 0.5
         didChangeTextField(usernameField)
+        
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(keyboardWillShow(_:)), name: UIKeyboardWillShowNotification, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(keyboardWillHide(_:)), name: UIKeyboardWillHideNotification, object: nil)
     }
     
-    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        view.endEditing(true)
+    deinit {
+        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillShowNotification, object: nil)
+        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillHideNotification, object: nil)
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -49,13 +53,42 @@ class JFRegisterViewController: UIViewController {
         navigationController?.setNavigationBarHidden(true, animated: true)
     }
     
+    /**
+     键盘即将显示
+     */
+    @objc private func keyboardWillShow(notification: NSNotification) {
+        let userInfo = notification.userInfo!
+        
+        let beginHeight = (userInfo[UIKeyboardFrameBeginUserInfoKey] as! NSValue).CGRectValue().size.height
+        let endHeight = (userInfo[UIKeyboardFrameEndUserInfoKey] as! NSValue).CGRectValue().size.height
+        
+        if beginHeight > 0 && endHeight > 0 {
+            UIView.animateWithDuration(0.25) {
+                self.view.transform = CGAffineTransformMakeTranslation(0, -endHeight + (SCREEN_HEIGHT - CGRectGetMaxY(self.registerButton.frame)) - 10)
+            }
+        }
+    }
+    
+    /**
+     键盘即将隐藏
+     */
+    @objc private func keyboardWillHide(notification: NSNotification) {
+        UIView.animateWithDuration(0.25) {
+            self.view.transform = CGAffineTransformIdentity
+        }
+    }
+    
+    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        view.endEditing(true)
+    }
+    
     @IBAction func didChangeTextField(sender: UITextField) {
         if usernameField.text?.characters.count >= 5 && passwordField1.text?.characters.count > 5 && passwordField2.text?.characters.count > 5 {
             registerButton.enabled = true
-            registerButton.backgroundColor = COLOR_NAV_BG
+            registerButton.backgroundColor = buttonColorNormal
         } else {
             registerButton.enabled = false
-            registerButton.backgroundColor = UIColor.grayColor()
+            registerButton.backgroundColor = buttonColorDisabled
         }
     }
     

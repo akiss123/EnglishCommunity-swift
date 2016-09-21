@@ -36,7 +36,7 @@ extension JFNetworkTools {
             
             if let data = response.data {
                 let json = JSON(data: data)
-                print(json)
+                // print(json)
                 finished(success: true, result: json, error: nil)
             } else {
                 JFProgressHUD.showInfoWithStatus("您的网络不给力哦")
@@ -60,7 +60,7 @@ extension JFNetworkTools {
             
             if let data = response.data {
                 let json = JSON(data: data)
-                print(json)
+                // print(json)
                 finished(success: true, result: json, error: nil)
             } else {
                 JFProgressHUD.showInfoWithStatus("您的网络不给力哦")
@@ -90,7 +90,7 @@ extension JFNetworkTools {
                 if json["code"].intValue >= 4000 {
                     JFAccountModel.logout()
                 }
-                print(json)
+                // print(json)
                 finished(success: true, result: json, error: nil)
             } else {
                 JFProgressHUD.showInfoWithStatus("您的网络不给力哦")
@@ -121,7 +121,7 @@ extension JFNetworkTools {
                 if json["code"].intValue >= 4000 {
                     JFAccountModel.logout()
                 }
-                print(json)
+//                 print(json)
                 finished(success: true, result: json, error: nil)
             } else {
                 JFProgressHUD.showInfoWithStatus("您的网络不给力哦")
@@ -171,6 +171,7 @@ extension JFNetworkTools {
             }
         }
         
+        print(parameters)
         postWithToken(POST_TWEETS, parameters: parameters, finished: finished)
     }
     
@@ -245,6 +246,15 @@ extension JFNetworkTools {
         
         post(POST_FEEDBACK, parameters: parameters, finished: finished)
     }
+    
+    /**
+     获取播放节点
+     
+     - parameter finished: 完成回调
+     */
+    func getPlayNode(finished: NetworkFinished) {
+        get(GET_PALY_NODE, parameters: nil, finished: finished)
+    }
 }
 
 // MARK: - 辅助方法
@@ -265,7 +275,7 @@ extension JFNetworkTools {
     /**
      获取当前网络状态
      
-     - returns: 0未知 1WiFi 22G 33G 44G
+     - returns: 0未知 1WiFi 2WAN
      */
     func getCurrentNetworkState() -> Int {
         let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate

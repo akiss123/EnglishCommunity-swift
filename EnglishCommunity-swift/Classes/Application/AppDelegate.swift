@@ -8,12 +8,14 @@
 
 import UIKit
 import SwipeBack
+import SwiftyJSON
+import Reachability
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
     
     var window: UIWindow?
-    
+    var webServer = MongooseDaemon()
     var hostReach: Reachability?
     var networkState = 0
     
@@ -27,9 +29,37 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         setupGlobalData()         // 配置全局数据
         setupShareSDK()           // 配置shareSDK
         setupReachability()       // 配置网络检测
-        
         self.launchOptions = launchOptions
+        
         return true
+    }
+    
+    /**
+     配置web服务器
+     */
+    func setupWebServer() {
+        webServer.startMongooseDaemon("8080")
+    }
+    
+    /**
+     配置默认播放节点
+     */
+    private func setupPlayNode() {
+        
+        JFNetworkTools.shareNetworkTool.getPlayNode { (success, result, error) in
+            guard let result = result else {
+                return
+            }
+            
+            // 更新全局节点
+            let node = result["result"]["node"].stringValue
+            if node == "app" {
+                PLAY_NODE = "app"
+            } else {
+                PLAY_NODE = "web"
+            }
+            
+        }
     }
     
     /**
@@ -51,22 +81,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         
         switch curReach.currentReachabilityStatus() {
-        case NotReachable:
+        case NetworkStatus.NotReachable:
             print("无网络")
-        case ReachableViaWiFi:
+        case NetworkStatus.ReachableViaWiFi:
             networkState = 1
             print("WiFi")
-        case kReachableVia2G:
+        case NetworkStatus.ReachableViaWWAN:
             networkState = 2
-            print("2G")
-        case kReachableVia3G:
-            networkState = 3
-            print("3G")
-        case kReachableVia4G:
-            networkState = 4
-            print("4G")
-        default:
-            print("未知")
+            print("WAN")
         }
         
     }
@@ -126,22 +148,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     private func setupRootViewController() {
         
         window = UIWindow(frame: SCREEN_BOUNDS)
+        window?.backgroundColor = COLOR_NAV_BG
         window?.rootViewController = JFTabBarController()
         window?.makeKeyAndVisible()
         
-        // 启动图动画 - 预加载数据
-//        let launchVc = UIStoryboard(name: "LaunchScreen", bundle: nil).instantiateInitialViewController()!
-//        launchVc.view.frame = SCREEN_BOUNDS
-//        window?.addSubview(launchVc.view)
-//        
-//        UIView.animateWithDuration(0.6, delay: 2, options: UIViewAnimationOptions.BeginFromCurrentState, animations: {
-//            launchVc.view.alpha = 0
-//        }) { (_) in
-//            UIApplication.sharedApplication().statusBarHidden = false
-//            launchVc.view.removeFromSuperview()
-//        }
-        
-        //        window?.addSubview(JFFPSLabel(frame: CGRect(x: SCREEN_WIDTH - 60, y: 26, width: 50, height: 30)))
+        // 测试FPS
+//        window?.addSubview(JFFPSLabel(frame: CGRect(x: SCREEN_WIDTH - 60, y: 26, width: 50, height: 30)))
     }
     
     /**
@@ -226,7 +238,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     func applicationDidBecomeActive(application: UIApplication) {
-        
+        setupPlayNode()           // 配置默认播放节点
+        setupWebServer()          // 配置web服务器
     }
     
     func applicationWillTerminate(application: UIApplication) {

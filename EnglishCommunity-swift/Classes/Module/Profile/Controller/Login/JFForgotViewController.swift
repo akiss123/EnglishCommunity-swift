@@ -16,19 +16,25 @@ class JFForgotViewController: UIViewController {
     @IBOutlet weak var emailView: UIView!
     @IBOutlet weak var emailField: UITextField!
     @IBOutlet weak var retrieveButton: UIButton!
+    let buttonColorNormal = UIColor.colorWithHexString("00ac59")
+    let buttonColorDisabled = UIColor.colorWithHexString("6d8579")
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let effectView = UIVisualEffectView(effect: UIBlurEffect(style: UIBlurEffectStyle.Dark))
-        effectView.frame = SCREEN_BOUNDS
-        bgImageView.addSubview(effectView)
-        
+        usernameView.layer.borderColor = UIColor.whiteColor().CGColor
+        usernameView.layer.borderWidth = 0.5
+        emailView.layer.borderColor = UIColor.whiteColor().CGColor
+        emailView.layer.borderWidth = 0.5
         didChangeTextField(usernameField)
+        
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(keyboardWillShow(_:)), name: UIKeyboardWillShowNotification, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(keyboardWillHide(_:)), name: UIKeyboardWillHideNotification, object: nil)
     }
     
-    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        view.endEditing(true)
+    deinit {
+        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillShowNotification, object: nil)
+        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillHideNotification, object: nil)
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -37,13 +43,42 @@ class JFForgotViewController: UIViewController {
         navigationController?.setNavigationBarHidden(true, animated: true)
     }
     
+    /**
+     键盘即将显示
+     */
+    @objc private func keyboardWillShow(notification: NSNotification) {
+        let userInfo = notification.userInfo!
+        
+        let beginHeight = (userInfo[UIKeyboardFrameBeginUserInfoKey] as! NSValue).CGRectValue().size.height
+        let endHeight = (userInfo[UIKeyboardFrameEndUserInfoKey] as! NSValue).CGRectValue().size.height
+        
+        if beginHeight > 0 && endHeight > 0 {
+            UIView.animateWithDuration(0.25) {
+                self.view.transform = CGAffineTransformMakeTranslation(0, -endHeight + (SCREEN_HEIGHT - CGRectGetMaxY(self.retrieveButton.frame)) - 10)
+            }
+        }
+    }
+    
+    /**
+     键盘即将隐藏
+     */
+    @objc private func keyboardWillHide(notification: NSNotification) {
+        UIView.animateWithDuration(0.25) {
+            self.view.transform = CGAffineTransformIdentity
+        }
+    }
+    
+    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        view.endEditing(true)
+    }
+    
     @IBAction func didChangeTextField(sender: UITextField) {
         if usernameField.text?.characters.count >= 5 && emailField.text?.characters.count >= 5 {
             retrieveButton.enabled = true
-            retrieveButton.backgroundColor = COLOR_NAV_BG
+            retrieveButton.backgroundColor = buttonColorNormal
         } else {
             retrieveButton.enabled = false
-            retrieveButton.backgroundColor = UIColor.grayColor()
+            retrieveButton.backgroundColor = buttonColorDisabled
         }
     }
     

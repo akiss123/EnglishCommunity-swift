@@ -28,7 +28,8 @@ class JFHomeViewController: UIViewController {
         
         prepareUI()
         tableView.mj_header = setupHeaderRefresh(self, action: #selector(updateHomeData))
-        tableView.mj_header.beginRefreshing()
+        loadTopData()
+        loadCategoriesData()
         
         // 配置JPUSH
         (UIApplication.sharedApplication().delegate as! AppDelegate).setupJPush()
@@ -40,6 +41,34 @@ class JFHomeViewController: UIViewController {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(false, animated: true)
         topScrollView?.adjustWhenControllerViewWillAppera()
+    }
+    
+    override func viewDidAppear(animated: Bool) {
+        super.viewDidAppear(animated)
+        showAppstoreTip()
+    }
+    
+    /**
+     弹出提示让用户去评论
+     */
+    private func showAppstoreTip() {
+        
+        // 在当前时间往后的1天后提示
+        let tipTime = NSUserDefaults.standardUserDefaults().doubleForKey("tipToAppstore")
+        
+        // 设置第一次弹出提示的时间
+        if tipTime < 1 {
+            NSUserDefaults.standardUserDefaults().setDouble(NSDate().timeIntervalSince1970 + 86400, forKey: "tipToAppstore")
+        }
+        
+        // 当前时间超过了规定时间就弹出提示
+        let nowTime = NSDate().timeIntervalSince1970
+        if nowTime > NSTimeInterval(NSUserDefaults.standardUserDefaults().doubleForKey("tipToAppstore")) {
+            let appstore = LBToAppStore()
+            appstore.myAppID = APPLE_ID
+            appstore.showGotoAppStore(self)
+        }
+        
     }
     
     /**
@@ -102,7 +131,6 @@ class JFHomeViewController: UIViewController {
         topScrollView?.imageURLStringsGroup = images
         topScrollView?.autoScrollTimeInterval = 5
         tableView.tableHeaderView = topScrollView
-        
     }
     
     /**
@@ -116,6 +144,13 @@ class JFHomeViewController: UIViewController {
      刷新首页数据
      */
     @objc private func updateHomeData() {
+        
+        // 有网络的情况下清理掉缓存
+        if JFNetworkTools.shareNetworkTool.getCurrentNetworkState() != 0 {
+            removeJson(BANNER_JSON_PATH)
+            removeJson(CATEGORIES_JSON_PATH)
+        }
+        
         loadTopData()
         loadCategoriesData()
     }

@@ -40,10 +40,14 @@ class JFProfileViewController: UIViewController {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: true)
         
+        // 更新头部信息
+        updateHeaderData()
+        
     }
     
     override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
+        
         updateData()
     }
     
@@ -69,7 +73,7 @@ class JFProfileViewController: UIViewController {
         placeholderButton.snp_makeConstraints { (make) in
             make.centerX.equalTo(tableView)
             make.centerY.equalTo(tableView).offset(40)
-            make.size.equalTo(CGSize(width: SCREEN_WIDTH - 100, height: 100))
+            make.size.equalTo(CGSize(width: SCREEN_WIDTH - 50, height: 150))
         }
         
         changePlaceholderButton()
@@ -80,12 +84,12 @@ class JFProfileViewController: UIViewController {
      */
     private func updateData() {
         
-        // 更新头部信息
-        updateHeaderData()
-        
         // 更新收藏
         page = 1
         loadCollectionVideoInfoList(page, count: 10, method: 0)
+        
+        // 更新消息状态
+        getUnlookedMessageCount()
     }
     
     /**
@@ -131,6 +135,37 @@ class JFProfileViewController: UIViewController {
     }
     
     /**
+     获取未读消息数量
+     */
+    private func getUnlookedMessageCount() {
+        
+        JFMessageRecord.getUnlookedMessageCount { (success, count) in
+            if success {
+                if count != 0 {
+                    self.headerView.redPointLabel.text = "\(count)"
+                    self.headerView.redPointLabel.hidden = false
+                } else {
+                    self.headerView.redPointLabel.text = "0"
+                    self.headerView.redPointLabel.hidden = true
+                }
+            }
+        }
+    }
+    
+    /**
+     清理未读消息数量
+     */
+    private func clearUnlookedMessage() {
+        
+        JFMessageRecord.clearUnlookedMessage { (success) in
+            if success {
+                self.headerView.redPointLabel.text = "0"
+                self.headerView.redPointLabel.hidden = true
+            }
+        }
+    }
+    
+    /**
      更新头部数据
      */
     private func updateHeaderData() {
@@ -139,7 +174,9 @@ class JFProfileViewController: UIViewController {
             headerView.nameLabel.text = JFAccountModel.shareAccount()!.nickname!
         } else {
             headerView.avatarButton.setBackgroundImage(UIImage(named: "default－portrait"), forState: UIControlState.Normal)
-            headerView.nameLabel.text = "登录后可以缓存视频哦"
+            headerView.nameLabel.text = "点击登录"
+            headerView.redPointLabel.text = "0"
+            headerView.redPointLabel.hidden = true
         }
     }
     
@@ -380,13 +417,6 @@ extension JFProfileViewController: JFProfileHeaderViewDelegate {
     }
     
     /**
-     下载管理
-     */
-    func didTappedDownloadButton() {
-        JFProgressHUD.showInfoWithStatus("暂未开放")
-    }
-    
-    /**
      朋友列表
      */
     func didTappedFriendButton() {
@@ -400,6 +430,7 @@ extension JFProfileViewController: JFProfileHeaderViewDelegate {
      */
     func didTappedMessageButton() {
         if isLogin(self) {
+            clearUnlookedMessage()
             navigationController?.pushViewController(JFMessageListViewController(style: UITableViewStyle.Plain), animated: true)
         }
     }

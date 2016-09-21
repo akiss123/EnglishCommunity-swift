@@ -9,7 +9,7 @@
 import UIKit
 import FMDB
 
-let VIDEO_INFOS_TABLE = "jf_video_infos"
+let VIDEOS_TABLE = "jf_videos"
 
 class JFSQLiteManager: NSObject {
     
@@ -17,7 +17,7 @@ class JFSQLiteManager: NSObject {
     static let shareManager = JFSQLiteManager()
     
     /// sqlite数据库名
-    private let dbName = "video_infos.db"
+    private let dbName = "videos.db"
     
     let dbQueue: FMDatabaseQueue
     
@@ -26,11 +26,10 @@ class JFSQLiteManager: NSObject {
         let dbPath = "\(documentPath)/\(dbName)"
         print(dbPath)
         
-        // 根据路径创建并打开数据库，开启一个串行队列
         dbQueue = FMDatabaseQueue(path: dbPath)
         super.init()
         
-        createVideoInfosTable(VIDEO_INFOS_TABLE)
+        createVideoInfosTable(VIDEOS_TABLE)
     }
     
     /**
@@ -38,11 +37,11 @@ class JFSQLiteManager: NSObject {
      
      - parameter tbname: 表名
      */
-    private func createVideoInfosTable(tbname: String) {
+    func createVideoInfosTable(tbname: String) {
         
         let sql = "CREATE TABLE IF NOT EXISTS \(tbname) ( \n" +
             "id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \n" +
-            "video_info_id INTEGER, \n" +
+            "video_vid VARCHAR \n" +
             "createTime VARCHAR(30) DEFAULT (datetime('now', 'localtime')) \n" +
         ");"
         
